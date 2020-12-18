@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+    branches: master
+  push:
+    branches: master
+
+# Defaults for building KLEE
+env:
+  BASE_IMAGE: ubuntu:bionic-20200807
+  REPOSITORY: klee
+  COVERAGE: 0
+  DISABLE_ASSERTIONS: 0
+  ENABLE_DOXYGEN: 0
+  ENABLE_OPTIMIZED: 1
+  ENABLE_DEBUG: 1
+  GTEST_VERSION: 1.7.0
+  KLEE_RUNTIME_BUILD: "Debug+Asserts"
+  LLVM_VERSION: 9
+  METASMT_VERSION: qf_abv
+  MINISAT_VERSION: "master"
+  REQUIRES_RTTI: 0
+  SANITIZER_BUILD:
+  SOLVERS: STP:Z3
+  STP_VERSION: 2.3.3
+  TCMALLOC_VERSION: 2.7
+  UCLIBC_VERSION: klee_uclibc_v1.2
+  USE_TCMALLOC: 1
+  USE_LIBCXX: 1
+  Z3_VERSION: 4.8.4
+
+jobs:
+  Linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        name: [
+                "Latest klee-uclibc",
+            ]
+        include:
+          # Check we can build latest klee-uclibc branch
+          - name: "Latest klee-uclibc"
+            env:
+              UCLIBC_VERSION: klee_0_9_29
+    steps:
+      - name: Checkout KLEE UClibc source code
+        uses: actions/checkout@v2
+      - name: Checkout KLEE source code
+        with:
+          repository: klee/klee
+
+      - name: Build KLEE
+        env: ${{ matrix.env }}
+        run: $GITHUB_WORKSPACE/klee/scripts/build/build.sh klee --docker
+
+      # - name: Run tests
+      #   run: scripts/build/run-tests.sh --run-docker --debug
